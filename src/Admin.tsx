@@ -45,7 +45,7 @@ export default function Admin() {
           <div className="logo big">&lt;Friend<span>Web</span>Developer/&gt;</div>
           <h2>Team Login</h2>
           <p className="sub">Sign in to your workspace.</p>
-          <input name="username" placeholder="Username" autoComplete="username" required />
+          <input name="username" placeholder="Email or username" autoComplete="username" required />
           <input name="password" type="password" placeholder="Password" autoComplete="current-password" required />
           <button className="btn">Sign in</button>
           {error && <p className="err">{error}</p>}

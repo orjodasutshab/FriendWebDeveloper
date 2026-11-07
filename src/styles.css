@@ -153,3 +153,14 @@ input[type=range]{width:100%;margin:8px 0;accent-color:var(--ac)}
   .menu{flex-direction:row;overflow-x:auto}.menu button{white-space:nowrap}
   .chat{grid-template-columns:1fr}.main{padding:18px}
 }
+
+/* ===== Member form + filters ===== */
+.photo-pick{grid-column:1/-1;display:flex;align-items:center;gap:12px}
+.photo-pick label{cursor:pointer}
+.lbl{display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:var(--mut)}
+.pwrow{grid-column:1/-1;display:flex;gap:8px}.pwrow input{flex:1}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px}
+.tabs button{white-space:nowrap;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:6px 14px;cursor:pointer;font:inherit;font-size:.88rem}
+.tabs button.on{background:var(--ac);color:var(--acfg);border-color:var(--ac)}
+.search{width:100%;max-width:360px;margin-bottom:16px}
+.lnk{text-transform:capitalize}

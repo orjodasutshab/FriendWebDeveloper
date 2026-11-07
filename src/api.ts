@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-export type User = { id: string; username: string; name: string; email: string; phone: string; photo: string; skills: string[]; experience: string; position: string; department: string; status: "active" | "inactive"; role: "admin" | "member"; joined: string };
+export type User = { id: string; username: string; name: string; email: string; phone: string; photo: string; skills: string[]; experience: string; portfolio: string; social: Record<string, string>; position: string; department: string; status: "active" | "inactive"; role: "admin" | "member"; joined: string };
 export type Project = { id: string; title: string; description: string; deadline: string; progress: number; status: "active" | "completed"; members: string[]; created: string; completedAt?: string };
 export type Task = { id: string; title: string; projectId: string; assignee: string; deadline: string; status: "pending" | "in_progress" | "completed" };
 export type Notice = { id: string; title: string; body: string; kind: "notice" | "announcement"; date: string; author: string };

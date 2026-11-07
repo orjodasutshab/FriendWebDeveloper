@@ -10,7 +10,7 @@ const ADMIN_USER = process.env.ADMIN_USER ?? "admin";
 const ADMIN_PASS = process.env.ADMIN_PASS ?? "admin123";
 app.use(express.json({ limit: "1mb" }));
 
-type User = { id: string; username: string; pass: string; name: string; email: string; phone: string; photo: string; skills: string[]; experience: string; position: string; department: string; status: "active" | "inactive"; role: "admin" | "member"; joined: string };
+type User = { id: string; username: string; pass: string; name: string; email: string; phone: string; photo: string; skills: string[]; experience: string; portfolio: string; social: Record<string, string>; position: string; department: string; status: "active" | "inactive"; role: "admin" | "member"; joined: string };
 type Project = { id: string; title: string; description: string; deadline: string; progress: number; status: "active" | "completed"; members: string[]; created: string; completedAt?: string };
 type Task = { id: string; title: string; projectId: string; assignee: string; deadline: string; status: "pending" | "in_progress" | "completed" };
 type Notice = { id: string; title: string; body: string; kind: "notice" | "announcement"; date: string; author: string };
@@ -40,7 +40,7 @@ const fail = (res: Response, code: number, error: string) => res.status(code).js
 const pick = (o: any, keys: string[]) => Object.fromEntries(keys.filter((k) => o[k] !== undefined).map((k) => [k, o[k]]));
 
 if (!db.users.length) {
-  db.users.push({ id: randomUUID(), username: ADMIN_USER, pass: hash(ADMIN_PASS), name: "Admin", email: "", phone: "", photo: "", skills: [], experience: "", position: "Team Lead", department: "Management", status: "active", role: "admin", joined: now() });
+  db.users.push({ id: randomUUID(), username: ADMIN_USER, pass: hash(ADMIN_PASS), name: "Admin", email: "", phone: "", photo: "", skills: [], experience: "", portfolio: "", social: {}, position: "Team Lead", department: "Management", status: "active", role: "admin", joined: now() });
   save();
 }
 
@@ -61,7 +61,8 @@ function admin(_req: Request, res: Response, next: NextFunction) {
 // ---------- Auth ----------
 app.post("/api/login", (req, res) => {
   const { username, password } = req.body ?? {};
-  const u = db.users.find((x) => x.username === String(username ?? "").toLowerCase().trim());
+  const id = String(username ?? "").toLowerCase().trim();
+  const u = db.users.find((x) => x.username === id || (x.email && x.email.toLowerCase() === id));
   if (!u || !check(String(password ?? ""), u.pass)) return fail(res, 401, "Wrong username or password.");
   if (u.status !== "active") return fail(res, 403, "Your account is inactive.");
   const token = randomUUID();
@@ -101,15 +102,17 @@ app.get("/api/stats", auth, (_q, res) => {
 });
 
 // ---------- Members ----------
-const PROFILE = ["name", "email", "phone", "photo", "skills", "experience"];
-const ADMINF = [...PROFILE, "position", "department", "status", "role"];
+const PROFILE = ["name", "email", "phone", "photo", "skills", "experience", "portfolio", "social"];
+const ADMINF = [...PROFILE, "position", "department", "status", "role", "joined"];
 app.get("/api/members", auth, (_q, res) => res.json(db.users.map(pub)));
 app.post("/api/members", auth, admin, (req, res) => {
   const b = req.body ?? {};
-  const username = String(b.username ?? "").toLowerCase().trim();
-  if (!b.name || !username || !b.password) return fail(res, 400, "Name, username and password are required.");
-  if (db.users.some((u) => u.username === username)) return fail(res, 400, "Username already exists.");
-  const u: User = { id: randomUUID(), username, pass: hash(String(b.password)), name: b.name, email: b.email ?? "", phone: b.phone ?? "", photo: b.photo ?? "", skills: b.skills ?? [], experience: b.experience ?? "", position: b.position || "Member", department: b.department || "Development", status: b.status === "inactive" ? "inactive" : "active", role: b.role === "admin" ? "admin" : "member", joined: now() };
+  const email = String(b.email ?? "").toLowerCase().trim();
+  if (!b.name || !/^\S+@\S+\.\S+$/.test(email)) return fail(res, 400, "Name and a valid email are required.");
+  if (String(b.password ?? "").length < 8) return fail(res, 400, "Password must be at least 8 characters.");
+  if (db.users.some((u) => u.username === email || u.email.toLowerCase() === email)) return fail(res, 400, "This email is already used.");
+  const d = new Date(b.joined);
+  const u: User = { id: randomUUID(), username: email, pass: hash(String(b.password)), name: b.name, email, phone: b.phone ?? "", photo: b.photo ?? "", skills: b.skills ?? [], experience: b.experience ?? "", portfolio: b.portfolio ?? "", social: b.social ?? {}, position: b.position || "Member", department: b.department || "Development Team", status: b.status === "inactive" ? "inactive" : "active", role: b.role === "admin" ? "admin" : "member", joined: b.joined && !isNaN(+d) ? d.toISOString() : now() };
   db.users.push(u);
   save();
   res.json(pub(u));
@@ -122,8 +125,16 @@ app.put("/api/members/:id", auth, (req, res) => {
   if (!isAdmin && t.id !== user.id) return fail(res, 403, "Not allowed.");
   const patch: any = pick(req.body ?? {}, isAdmin ? ADMINF : PROFILE);
   if (t.id === user.id) { delete patch.status; delete patch.role; }
+  if (patch.email !== undefined) {
+    patch.email = String(patch.email).toLowerCase().trim();
+    if (patch.email && db.users.some((u) => u.id !== t.id && u.email.toLowerCase() === patch.email)) return fail(res, 400, "This email is already used.");
+  }
+  if (patch.joined) { const d = new Date(patch.joined); if (isNaN(+d)) delete patch.joined; else patch.joined = d.toISOString(); }
+  if (req.body?.password) {
+    if (String(req.body.password).length < 8) return fail(res, 400, "Password must be at least 8 characters.");
+    t.pass = hash(String(req.body.password));
+  }
   Object.assign(t, patch);
-  if (req.body?.password) t.pass = hash(String(req.body.password));
   save();
   res.json(pub(t));
 });
@@ -144,7 +155,7 @@ app.post("/api/applications/:id/approve", auth, admin, (req, res) => {
   let username = a.email.split("@")[0].toLowerCase().replace(/[^a-z0-9._-]/g, "");
   while (db.users.some((u) => u.username === username)) username += Math.floor(Math.random() * 10);
   const password = randomBytes(4).toString("hex");
-  db.users.push({ id: randomUUID(), username, pass: hash(password), name: a.name, email: a.email, phone: a.phone, photo: "", skills: a.skills.split(",").map((s) => s.trim()).filter(Boolean), experience: "", position: "Member", department: "Development", status: "active", role: "member", joined: now() });
+  db.users.push({ id: randomUUID(), username, pass: hash(password), name: a.name, email: a.email, phone: a.phone, photo: "", skills: a.skills.split(",").map((s) => s.trim()).filter(Boolean), experience: "", portfolio: a.portfolio, social: {}, position: "Member", department: "Development Team", status: "active", role: "member", joined: now() });
   a.status = "approved";
   save();
   res.json({ ok: true, username, password });
