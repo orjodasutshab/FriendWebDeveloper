@@ -1,14 +1,19 @@
-# Friend Web Developer
+# Friend Web Developer – Team Workspace
 
-React + TypeScript (Vite) frontend, Node.js + Express backend.
+React + TypeScript (Vite) frontend, Node.js + Express backend. Data is stored in `data.json`.
 
-## Run
     npm install
-    npm run dev          # frontend: http://localhost:5173, API: http://localhost:3000
+    npm run dev       # site: http://localhost:5173  (API on :3000)
+    npm run build && npm start   # production on :3000
 
-## Production
-    npm run build
-    npm start            # serves site + API on http://localhost:3000
+## Team login
+Open `/#/admin` or click "Team Login". First run creates the admin account
+(default `admin` / `admin123`). Change before going live:
 
-Contact form messages are saved in `messages.json`.
-Edit team, services and projects at the top of `src/App.tsx`.
+    # PowerShell
+    $env:ADMIN_USER="name"; $env:ADMIN_PASS="strong-password"; npm start
+
+## Features
+Dashboard, Team Members (profiles, active/inactive), Join applications (approve → account),
+Projects (assign, deadline, progress, history, discussion), Tasks (pending / in progress / completed),
+Notice Board, member-to-member messages, contact inbox, website settings. Roles: admin and member.

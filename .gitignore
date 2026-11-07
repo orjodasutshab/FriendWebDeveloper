@@ -1,0 +1,5 @@
+node_modules
+dist
+messages.json
+data.json
+.env

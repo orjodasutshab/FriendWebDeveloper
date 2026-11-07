@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
+import Join from "./Join";
 
 const services = [
   { icon: "🎨", title: "UI/UX Design", text: "Modern, clean interfaces that people enjoy using." },
@@ -35,6 +36,8 @@ export default function App() {
   );
   const [status, setStatus] = useState<"idle" | "sending" | "ok" | "error">("idle");
   const [error, setError] = useState("");
+  const [cfg, setCfg] = useState({ siteName: "Friend Web Developer", email: "hello@yourteam.com", phone: "+880 1XXX-XXXXXX", address: "Dhaka, Bangladesh" });
+  useEffect(() => { fetch("/api/settings").then((r) => r.json()).then(setCfg).catch(() => {}); }, []);
 
   useEffect(() => {
     document.documentElement.dataset.theme = dark ? "dark" : "light";
@@ -75,6 +78,8 @@ export default function App() {
             <a href="#work">Work</a>
             <a href="#team">Team</a>
             <a href="#contact">Contact</a>
+            <a href="#join">Join Us</a>
+            <a className="login-link" href="#/admin">Team Login</a>
             <button className="toggle" onClick={() => setDark(!dark)} aria-label="Toggle theme">
               {dark ? "☀️" : "🌙"}
             </button>
@@ -84,7 +89,9 @@ export default function App() {
 
       <main id="top">
         <section className="hero">
-          <div className="wrap">
+          <div className="blob b1" /><div className="blob b2" />
+          <div className="wrap hero-grid">
+            <div>
             <span className="pill">Web Development Team · Bangladesh</span>
             <h1>We turn ideas into <em>beautiful websites</em>.</h1>
             <p>
@@ -94,6 +101,18 @@ export default function App() {
             <div className="cta">
               <a className="btn" href="#contact">Start a project</a>
               <a className="btn ghost" href="#work">See our work</a>
+            </div>
+            </div>
+            <div className="code-win" aria-hidden="true">
+              <div className="dots"><i /><i /><i /></div>
+              <pre>{`const team = {
+  name: "Friend Web Developer",
+  stack: ["React", "TypeScript", "Node.js"],
+  passion: "Building the web",
+};
+
+team.buildYourWebsite();
+// ✔ Fast  ✔ Modern  ✔ Responsive`}</pre>
             </div>
           </div>
         </section>
@@ -147,12 +166,14 @@ export default function App() {
           </div>
         </section>
 
+        <Join />
+
         <section id="contact" className="wrap sec">
           <div className="contact">
             <div>
               <h2>Let’s work together</h2>
               <p className="sub">Tell us about your project and we will reply soon.</p>
-              <p>📧 hello@yourteam.com<br />📞 +880 1XXX-XXXXXX<br />📍 Dhaka, Bangladesh</p>
+              <p>📧 {cfg.email}<br />📞 {cfg.phone}<br />📍 {cfg.address}</p>
             </div>
             <form onSubmit={submit}>
               <input name="name" placeholder="Your name" required />
@@ -168,7 +189,7 @@ export default function App() {
         </section>
       </main>
 
-      <footer>© {new Date().getFullYear()} Friend Web Developer. All rights reserved.</footer>
+      <footer>© {new Date().getFullYear()} {cfg.siteName}. All rights reserved.</footer>
     </>
   );
 }
