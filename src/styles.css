@@ -164,3 +164,66 @@ input[type=range]{width:100%;margin:8px 0;accent-color:var(--ac)}
 .tabs button.on{background:var(--ac);color:var(--acfg);border-color:var(--ac)}
 .search{width:100%;max-width:360px;margin-bottom:16px}
 .lnk{text-transform:capitalize}
+
+/* ===== v3: agency workspace design ===== */
+.fcol{display:flex;flex-direction:column;gap:12px}
+.side{width:auto}
+.menu h6{margin:16px 10px 4px;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:600}
+.menu button{display:flex;align-items:center;gap:6px;width:100%}
+.dot{margin-left:auto;background:#ef4444;color:#fff;border-radius:999px;font-size:.68rem;min-width:18px;height:18px;display:inline-grid;place-items:center;padding:0 5px}
+.side.navy{background:#0b1b3a;border-color:#0b1b3a;color:#dbe4f5}
+.navy .logo{color:#fff}.navy .menu button{color:#c7d3ea}.navy .menu button:hover{background:#13295a}
+.navy .menu button.on{background:#1f4fd8;color:#fff}.navy .me{background:#122a55}.navy small{color:#9fb0d0}
+.navy .btn.ghost{color:#fff;border-color:#2a4a8a}
+.main{padding:0;max-width:none;min-width:0}
+.content{padding:26px;max-width:1180px}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 26px;border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0;z-index:5}
+.tb-r{display:flex;align-items:center;gap:10px}
+.bell,.who{background:none;border:1px solid var(--line);border-radius:12px;padding:6px 10px;cursor:pointer;color:var(--fg);font:inherit;display:flex;align-items:center;gap:8px;position:relative}
+.bell .dot{position:absolute;top:-6px;right:-6px;margin:0}
+.bellwrap{position:relative}
+.drop{position:absolute;right:0;top:46px;width:min(340px,86vw);max-height:420px;overflow:auto;z-index:20;box-shadow:0 20px 50px -15px rgba(0,0,0,.35)}
+.drop p{margin:0;padding:8px 6px;border-bottom:1px solid var(--line);font-size:.9rem}.drop p.unr{background:color-mix(in srgb,var(--ac) 10%,transparent)}
+.drop small{display:block;color:var(--mut)}
+.tablewrap{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow-x:auto;margin-bottom:22px}
+.tbl{width:100%;border-collapse:collapse;font-size:.92rem}
+.tbl th{text-align:left;padding:12px 14px;color:var(--mut);font-weight:600;font-size:.8rem;background:var(--bg);white-space:nowrap}
+.tbl td{padding:12px 14px;border-top:1px solid var(--line);vertical-align:middle}
+.tbl tr.click{cursor:pointer}.tbl tr.click:hover td{background:color-mix(in srgb,var(--ac) 5%,transparent)}
+.click{cursor:pointer}.pad{padding:18px}
+.toolbar{display:flex;gap:12px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.pill{font-size:.74rem;font-weight:600;padding:3px 11px;border-radius:999px;background:var(--line);color:var(--mut);text-transform:capitalize;white-space:nowrap}
+.s-completed,.s-paid,.s-active,.s-resolved,.s-verified,.s-low,.s-approved{background:#16a34a22;color:#16a34a}
+.s-in_progress,.s-open{background:#2563eb22;color:#2563eb}
+.s-review,.s-partial,.s-medium,.s-pending,.s-pending_verification{background:#f59e0b22;color:#d97706}
+.s-high,.s-urgent,.s-blocked,.s-unpaid,.s-rejected{background:#dc262622;color:#dc2626}
+.s-refunded{background:#9333ea22;color:#9333ea}
+.detail{padding:6px 4px;display:flex;flex-direction:column;gap:6px}
+.detail h4{margin:14px 0 4px}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:8px}
+.dgrid small{display:block;color:var(--mut);font-size:.75rem}
+.callout{background:color-mix(in srgb,var(--ac) 10%,var(--card));border:1px solid var(--ac);border-radius:14px;padding:14px;margin-bottom:16px}
+.callout input{width:100%;margin-top:8px}
+.ms{display:flex;gap:8px;align-items:center;font-size:.92rem}
+.rev,.rp{font-size:.92rem;margin:4px 0}.rp.staff{background:color-mix(in srgb,var(--ac) 8%,transparent);padding:6px 10px;border-radius:10px}
+.shot{max-width:320px;border-radius:10px;border:1px solid var(--line)}.thumb2{height:48px;border-radius:8px}
+.kanban{display:grid;grid-template-columns:repeat(4,minmax(220px,1fr));gap:14px;overflow-x:auto;align-items:start}
+.col{background:color-mix(in srgb,var(--line) 40%,transparent);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px;min-height:120px}
+.col h4{margin:0 0 4px;display:flex;justify-content:space-between}.col h4 span{background:var(--card);border-radius:999px;padding:0 9px;font-size:.8rem}
+.kt{display:flex;flex-direction:column;gap:6px;padding:14px}.kt:hover{transform:none}.kt p{margin:0}
+.bars{display:flex;align-items:flex-end;gap:14px;height:170px;padding-top:10px;position:relative}
+.bcol{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end}
+.bpair{display:flex;gap:4px;align-items:flex-end;height:calc(100% - 20px);width:100%;justify-content:center}
+.bpair i{width:34%;min-height:3px;border-radius:6px 6px 0 0}.inc{background:var(--ac)}.exp{background:#f59e0b}
+.legend{position:absolute;top:-8px;right:0;display:flex;gap:12px;font-size:.78rem;color:var(--mut)}.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px}
+.price{display:block;font-size:1.8rem;color:var(--ac);margin:8px 0}
+.plan{list-style:none;padding:0;margin:12px 0;color:var(--mut);text-align:left;font-size:.92rem}.plan li{padding:3px 0}
+.chat2{display:grid;grid-template-columns:300px 1fr;gap:16px;height:560px}
+.chat2 .cl{display:flex;flex-direction:column;gap:6px;overflow:auto;padding:12px}
+.chat2 .cl button{display:flex;gap:10px;align-items:center;text-align:left;background:none;border:0;color:var(--fg);padding:8px;border-radius:12px;cursor:pointer;font:inherit}
+.chat2 .cl button:hover,.chat2 .cl button.on{background:var(--bg)}
+.chat2 .cv{display:flex;flex-direction:column;padding:0}
+.cvh{display:flex;gap:12px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+.chat2 .bubbles{flex:1;padding:18px;max-height:none}.chat2 .inline{padding:12px 16px;margin:0;border-top:1px solid var(--line)}
+.chat2 .cv>.mut{padding:20px}
+@media(max-width:900px){.kanban{grid-template-columns:repeat(4,240px)}.chat2{grid-template-columns:1fr;height:auto}.topbar{padding:10px 16px}.content{padding:16px}.side.navy,.side{position:static;height:auto}}

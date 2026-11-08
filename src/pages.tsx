@@ -1,11 +1,11 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
-import { DEPARTMENTS } from "./roles";
-import { api, useLoad, User, Project, Task, Notice, Application, Contact, Settings } from "./api";
+import { DEPARTMENTS, ROLE_LABEL, STAFF_ROLES } from "./roles";
+import { api, can, useLoad, User, Notice, Application, Contact, Settings } from "./api";
 
-const fd = (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); return Object.fromEntries(new FormData(e.currentTarget)) as Record<string, any>; };
-const fmt = (d: string) => (d ? new Date(d).toLocaleDateString() : "—");
+export const fd = (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); return Object.fromEntries(new FormData(e.currentTarget)) as Record<string, any>; };
+export const fmt = (d: string) => (d ? new Date(d).toLocaleDateString() : "—");
 const ini = (n: string) => n.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
-const err = (e: any) => alert(e.message ?? "Error");
+export const err = (e: any) => alert(e.message ?? "Error");
 const STATUS: Record<string, string> = { pending: "Pending", in_progress: "In Progress", completed: "Completed" };
 
 export function Avatar({ u, size = 44 }: { u?: User; size?: number }) {
@@ -13,34 +13,8 @@ export function Avatar({ u, size = 44 }: { u?: User; size?: number }) {
   return u?.photo ? <img className="pic" style={st} src={u.photo} alt={u.name} /> : <div className="pic" style={st}>{u ? ini(u.name) : "?"}</div>;
 }
 
-/* ---------------- 1. Dashboard ---------------- */
-export function Dashboard({ me }: { me: User }) {
-  const [s] = useLoad<any>("/stats", {});
-  const [members] = useLoad<User[]>("/members", []);
-  const [notices] = useLoad<Notice[]>("/notices", []);
-  const cards = [["👥", "Total Members", s.totalMembers], ["🚀", "Active Projects", s.activeProjects], ["🏁", "Completed Projects", s.completedProjects], ["⏳", "Pending Tasks", s.pendingTasks], ["🆕", "New Members (30 days)", s.newMembers]];
-  const recent = [...members].sort((a, b) => +new Date(b.joined) - +new Date(a.joined)).slice(0, 5);
-  return (
-    <>
-      <h1 className="ph">Welcome, {me.name} 👋</h1>
-      <div className="stat-grid">
-        {cards.map(([i, l, n]) => (<div className="card stat" key={l as string}><span>{i}</span><b>{n ?? "–"}</b><small>{l}</small></div>))}
-      </div>
-      <div className="two">
-        <div className="card"><h3>New members</h3>
-          {recent.map((m) => (<div className="row" key={m.id}><Avatar u={m} size={36} /><div><b>{m.name}</b><small>{m.position} · joined {fmt(m.joined)}</small></div></div>))}
-        </div>
-        <div className="card"><h3>Latest notices</h3>
-          {notices.slice(0, 4).map((n) => (<div className="row" key={n.id}><div><b>{n.kind === "announcement" ? "📣 " : "📌 "}{n.title}</b><small>{fmt(n.date)}</small></div></div>))}
-          {!notices.length && <p className="mut">No notices yet.</p>}
-        </div>
-      </div>
-    </>
-  );
-}
-
 /* ---------------- 2. Team Members ---------------- */
-function resize(file: File, max = 320): Promise<string> {
+export function resize(file: File, max = 320): Promise<string> {
   return new Promise((ok, no) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -112,7 +86,7 @@ function MemberForm({ ed, admin, onDone }: { ed: Partial<User>; admin: boolean; 
       {admin && <>
         <label className="lbl">Joining date<input name="joined" type="date" defaultValue={(ed.joined ?? new Date().toISOString()).slice(0, 10)} /></label>
         <label className="lbl">Member status<select name="status" defaultValue={ed.status ?? "active"}><option value="active">Active</option><option value="inactive">Inactive</option></select></label>
-        <label className="lbl">Access level<select name="access" defaultValue={ed.role ?? "member"}><option value="member">Member (limited)</option><option value="admin">Admin (full access)</option></select></label>
+        <label className="lbl">Access level<select name="access" defaultValue={ed.role ?? "member"}>{STAFF_ROLES.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</select></label>
       </>}
       <div className="pwrow">
         <input type={show ? "text" : "password"} value={pw} onChange={(e) => setPw(e.target.value)} minLength={8} autoComplete="new-password"
@@ -127,7 +101,7 @@ function MemberForm({ ed, admin, onDone }: { ed: Partial<User>; admin: boolean; 
 }
 
 export function Members({ me }: { me: User }) {
-  const admin = me.role === "admin";
+  const admin = can(me, "members", "u");
   const [list, reload] = useLoad<User[]>("/members", []);
   const [ed, setEd] = useState<Partial<User> | null>(null);
   const [dep, setDep] = useState("");
@@ -199,118 +173,6 @@ export function Applications() {
   );
 }
 
-/* ---------------- 4. Projects ---------------- */
-function Discussion({ id, members }: { id: string; members: User[] }) {
-  const [list, reload] = useLoad<any[]>(`/projects/${id}/comments`, []);
-  async function send(e: FormEvent<HTMLFormElement>) {
-    const form = e.currentTarget; const f = fd(e);
-    if (!f.text) return;
-    try { await api(`/projects/${id}/comments`, "POST", { text: f.text }); form.reset(); reload(); } catch (x) { err(x); }
-  }
-  return (
-    <div className="disc">
-      {list.map((c) => (<p key={c.id}><b>{members.find((m) => m.id === c.userId)?.name ?? "?"}:</b> {c.text} <small>{new Date(c.date).toLocaleString()}</small></p>))}
-      <form className="inline" onSubmit={send}><input name="text" placeholder="Write a comment…" /><button className="btn sm">Send</button></form>
-    </div>
-  );
-}
-
-export function Projects({ me }: { me: User }) {
-  const admin = me.role === "admin";
-  const [projects, reload] = useLoad<Project[]>("/projects", []);
-  const [members] = useLoad<User[]>("/members", []);
-  const [open, setOpen] = useState("");
-  const name = (id: string) => members.find((m) => m.id === id)?.name ?? "?";
-  async function create(e: FormEvent<HTMLFormElement>) {
-    const form = e.currentTarget;
-    const sel = [...form.querySelectorAll<HTMLInputElement>("input[name=m]:checked")].map((i) => i.value);
-    const f = fd(e);
-    try { await api("/projects", "POST", { title: f.title, description: f.description, deadline: f.deadline, members: sel }); form.reset(); reload(); } catch (x) { err(x); }
-  }
-  const upd = (id: string, body: object) => api(`/projects/${id}`, "PUT", body).then(reload).catch(err);
-  const Card = (p: Project) => (
-    <article className="card" key={p.id}>
-      <div className="msg-top"><b>{p.title}</b><span className={`badge ${p.status}`}>{p.status}</span></div>
-      <p className="mut">{p.description}</p>
-      <p className="mut">📅 Deadline: {fmt(p.deadline)} {p.completedAt && `· ✅ Completed ${fmt(p.completedAt)}`}</p>
-      <div className="bar"><div style={{ width: `${p.progress}%` }} /></div><small>{p.progress}% complete</small>
-      {admin && p.status === "active" && <input type="range" min={0} max={100} defaultValue={p.progress} onPointerUp={(e) => upd(p.id, { progress: Number(e.currentTarget.value) })} onKeyUp={(e) => upd(p.id, { progress: Number(e.currentTarget.value) })} />}
-      <div className="chips">{p.members.map((id) => <i key={id}>👤 {name(id)}</i>)}</div>
-      <div className="acts">
-        <button className="btn ghost sm" onClick={() => setOpen(open === p.id ? "" : p.id)}>💬 Discussion</button>
-        {admin && p.status === "active" && <button className="btn sm" onClick={() => upd(p.id, { status: "completed" })}>Mark complete</button>}
-        {admin && <button className="del" onClick={() => confirm("Delete project?") && api(`/projects/${p.id}`, "DELETE").then(reload).catch(err)}>Delete</button>}
-      </div>
-      {open === p.id && <Discussion id={p.id} members={members} />}
-    </article>
-  );
-  return (
-    <>
-      <h1 className="ph">Projects</h1>
-      {admin && (
-        <form className="card fgrid" onSubmit={create}>
-          <h3>New project</h3>
-          <input name="title" placeholder="Project title" required />
-          <input name="deadline" type="date" />
-          <textarea name="description" placeholder="Description" rows={2} />
-          <div className="chips pick">{members.map((m) => <label key={m.id}><input type="checkbox" name="m" value={m.id} /> {m.name}</label>)}</div>
-          <div className="acts"><button className="btn sm">Create &amp; assign</button></div>
-        </form>
-      )}
-      <h3>Active</h3><div className="stack">{projects.filter((p) => p.status === "active").map(Card)}</div>
-      <h3>Completed history</h3><div className="stack">{projects.filter((p) => p.status === "completed").map(Card)}</div>
-    </>
-  );
-}
-
-/* ---------------- 5. Tasks ---------------- */
-export function Tasks({ me }: { me: User }) {
-  const admin = me.role === "admin";
-  const [tasks, reload] = useLoad<Task[]>("/tasks", []);
-  const [members] = useLoad<User[]>("/members", []);
-  const [projects] = useLoad<Project[]>("/projects", []);
-  const [filter, setFilter] = useState("");
-  async function create(e: FormEvent<HTMLFormElement>) {
-    const form = e.currentTarget; const f = fd(e);
-    try { await api("/tasks", "POST", f); form.reset(); reload(); } catch (x) { err(x); }
-  }
-  const shown = tasks.filter((t) => !filter || t.status === filter);
-  return (
-    <>
-      <h1 className="ph">Tasks</h1>
-      {admin && (
-        <form className="card fgrid" onSubmit={create}>
-          <h3>Assign a task</h3>
-          <input name="title" placeholder="Task title" required />
-          <select name="assignee" required><option value="">Assign to…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
-          <select name="projectId"><option value="">No project</option>{projects.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}</select>
-          <input name="deadline" type="date" />
-          <div className="acts"><button className="btn sm">Assign</button></div>
-        </form>
-      )}
-      <select className="filter" value={filter} onChange={(e) => setFilter(e.target.value)}>
-        <option value="">All statuses</option>{Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-      </select>
-      <div className="stack">
-        {shown.map((t) => {
-          const late = t.deadline && t.status !== "completed" && new Date(t.deadline) < new Date();
-          return (
-            <article className="card task" key={t.id}>
-              <div><b>{t.title}</b><small>{members.find((m) => m.id === t.assignee)?.name} · {projects.find((p) => p.id === t.projectId)?.title ?? "No project"}</small>
-                <small className={late ? "late" : ""}>📅 {fmt(t.deadline)} {late && "· Overdue"}</small></div>
-              <select value={t.status} onChange={(e) => api(`/tasks/${t.id}`, "PUT", { status: e.target.value }).then(reload).catch(err)}>
-                {Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-              </select>
-              {admin && <button className="del" onClick={() => api(`/tasks/${t.id}`, "DELETE").then(reload).catch(err)}>✕</button>}
-            </article>
-          );
-        })}
-        {!shown.length && <p className="mut">No tasks.</p>}
-      </div>
-    </>
-  );
-}
-
 /* ---------------- 6. Notices + Chat ---------------- */
 export function Notices({ me }: { me: User }) {
   const [list, reload] = useLoad<Notice[]>("/notices", []);
@@ -321,7 +183,7 @@ export function Notices({ me }: { me: User }) {
   return (
     <>
       <h1 className="ph">Notice Board</h1>
-      {me.role === "admin" && (
+      {can(me, "notices", "c") && (
         <form className="card fgrid" onSubmit={post}>
           <input name="title" placeholder="Title" required />
           <select name="kind"><option value="notice">📌 Notice</option><option value="announcement">📣 Announcement</option></select>
@@ -334,37 +196,9 @@ export function Notices({ me }: { me: User }) {
           <article className="card" key={n.id}>
             <div className="msg-top"><b>{n.kind === "announcement" ? "📣" : "📌"} {n.title}</b><time>{fmt(n.date)} · {n.author}</time></div>
             <p>{n.body}</p>
-            {me.role === "admin" && <button className="del" onClick={() => api(`/notices/${n.id}`, "DELETE").then(reload).catch(err)}>Delete</button>}
+            {can(me, "notices", "c") && <button className="del" onClick={() => api(`/notices/${n.id}`, "DELETE").then(reload).catch(err)}>Delete</button>}
           </article>
         ))}
-      </div>
-    </>
-  );
-}
-
-export function Chat({ me }: { me: User }) {
-  const [members] = useLoad<User[]>("/members", []);
-  const [to, setTo] = useState("");
-  const [list, setList] = useState<any[]>([]);
-  const load = () => { if (to) api<any[]>(`/dm/${to}`).then(setList).catch(() => {}); };
-  useEffect(() => { load(); const t = setInterval(load, 5000); return () => clearInterval(t); }, [to]);
-  async function send(e: FormEvent<HTMLFormElement>) {
-    const form = e.currentTarget; const f = fd(e);
-    if (!f.text) return;
-    try { await api("/dm", "POST", { to, text: f.text }); form.reset(); load(); } catch (x) { err(x); }
-  }
-  return (
-    <>
-      <h1 className="ph">Messages</h1>
-      <div className="chat">
-        <div className="card people">{members.filter((m) => m.id !== me.id).map((m) => (
-          <button key={m.id} className={m.id === to ? "on" : ""} onClick={() => setTo(m.id)}><Avatar u={m} size={30} /> {m.name}</button>))}</div>
-        <div className="card convo">
-          {!to ? <p className="mut">Select a member to start chatting.</p> : (<>
-            <div className="bubbles">{list.map((m) => <div key={m.id} className={m.from === me.id ? "b me" : "b"}>{m.text}<small>{new Date(m.date).toLocaleTimeString()}</small></div>)}</div>
-            <form className="inline" onSubmit={send}><input name="text" placeholder="Type a message…" autoComplete="off" /><button className="btn sm">Send</button></form>
-          </>)}
-        </div>
       </div>
     </>
   );

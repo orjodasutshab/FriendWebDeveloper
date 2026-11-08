@@ -75,11 +75,13 @@ export default function App() {
           <a href="#top" className="logo">&lt;Friend<span>Web</span>Developer/&gt;</a>
           <nav>
             <a href="#services">Services</a>
+            <a href="#pricing">Pricing</a>
             <a href="#work">Work</a>
             <a href="#team">Team</a>
             <a href="#contact">Contact</a>
             <a href="#join">Join Us</a>
-            <a className="login-link" href="#/admin">Team Login</a>
+            <a href="#/register">Client Register</a>
+            <a className="login-link" href="#/admin">Login</a>
             <button className="toggle" onClick={() => setDark(!dark)} aria-label="Toggle theme">
               {dark ? "☀️" : "🌙"}
             </button>
@@ -123,6 +125,12 @@ team.buildYourWebsite();
           ))}
         </section>
 
+        <section id="about" className="wrap sec">
+          <h2>About us</h2>
+          <p className="sub">A friendly team of developers and designers from Bangladesh.</p>
+          <div className="card"><p>We started as a group of friends who love the web. Today we design and build business websites, online shops and web apps, and we keep every client updated through our own project portal: progress, files, invoices and support in one place.</p></div>
+        </section>
+
         <section id="services" className="wrap sec">
           <h2>Our services</h2>
           <p className="sub">Everything you need to get online and grow.</p>
@@ -133,6 +141,18 @@ team.buildYourWebsite();
                 <h3>{s.title}</h3>
                 <p>{s.text}</p>
               </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="pricing" className="wrap sec">
+          <h2>Pricing &amp; packages</h2>
+          <p className="sub">Simple starting prices. Every project gets a custom quote.</p>
+          <div className="grid">
+            {[["Starter", "৳ 15,000", ["Landing page / 1–3 pages", "Mobile responsive", "Basic SEO", "1 revision round"]], ["Business", "৳ 40,000", ["Up to 10 pages", "Admin panel", "Contact & lead forms", "3 revision rounds"]], ["Custom", "Let’s talk", ["Web apps & e-commerce", "Custom features", "Client portal access", "Ongoing maintenance"]]].map(([n, price, f]) => (
+              <article className="card center" key={n as string}><h3>{n as string}</h3><b className="price">{price as string}</b>
+                <ul className="plan">{(f as string[]).map((x) => <li key={x}>✔ {x}</li>)}</ul>
+                <a className="btn sm" href="#contact">Get a quote</a></article>
             ))}
           </div>
         </section>
